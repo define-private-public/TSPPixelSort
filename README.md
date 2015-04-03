@@ -3,3 +3,6 @@ Pixel sorting using a genetic TSP technique to produce more accurate and interes
 
 
 ![result](http://i.imgur.com/EbuEG17.jpg)
+
+
+![result](http://i.imgur.com/FqSoS6b.png)![result](http://i.imgur.com/uUAnYbx.png)![result](http://i.imgur.com/nGaZSnY.png)
