@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:pixelSortApp="clr-namespace:PixelSortApp"
         xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
-        Title="TSP Pixel Sorter" Height="450" Width="1103.125">
+        Title="TSP Pixel Sorter" Height="450" Width="1103.125" MaxHeight="450" MaxWidth="1103.125" MinHeight="450" MinWidth="1103.125"  Icon="icon.ico" ShowMaxRestoreButton="False" ShowIconOnTitleBar="False">
     <Grid >
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200*"/>
@@ -47,6 +47,7 @@
                 </ContextMenu>
             </Image.ContextMenu>
         </Image>
+        <GridSplitter HorizontalAlignment="Left" Height="420" VerticalAlignment="Top" Width="5" Grid.Column="1"/>
 
     </Grid>
     <Window.TaskbarItemInfo>
