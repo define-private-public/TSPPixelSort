@@ -28,13 +28,25 @@
             <DockPanel  Margin="10,10,10,0" VerticalAlignment="Bottom" LastChildFill="False" HorizontalAlignment="Left">
                 <Button x:Name="LoadButton" Height="24" Width="50" Margin="0,0,10,0" Click="LoadButton_Click">Load</Button>
                 <Button x:Name="RunButton" Height="24" Width="50" Margin="0,0,10,0" Click="RunButton_Click">Run</Button>
-                <Button x:Name="SaveButton" Height="24" Width="50" Margin="0,0,10,0" Click="SaveButton_Click">Save</Button>
                 <Button x:Name="LoopButton" Height="24" Width="50" Click="LoopButton_Click" >Loop</Button>
             </DockPanel>
         </StackPanel>
 
-        <Image x:Name="OldImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="1"/>
-        <Image x:Name="NewImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="2"/>
+        <Image x:Name="OldImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="1">
+            <Image.ContextMenu>
+                <ContextMenu>
+                    <MenuItem x:Name="RotateMenuItem" Header="Rotate 90°" Click="RotateMenuItem_OnClick"/>
+                    <MenuItem x:Name="SaveOldMenuItem" Header="Save" Click="SaveOldMenuItem_OnClick"/>
+                </ContextMenu>
+            </Image.ContextMenu>
+        </Image>
+        <Image x:Name="NewImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="2">
+            <Image.ContextMenu>
+                <ContextMenu>
+                    <MenuItem x:Name="SaveNewMenuItem" Header="Save" Click="SaveNewMenuItem_OnClick"/>
+                </ContextMenu>
+            </Image.ContextMenu>
+        </Image>
 
     </Grid>
     <Window.TaskbarItemInfo>

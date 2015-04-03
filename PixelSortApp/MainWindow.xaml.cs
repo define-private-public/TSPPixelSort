@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using System.Net.Mime;
 using System.Threading;
 using System.Windows.Shell;
 using AForge.Genetic;
@@ -147,7 +149,7 @@ namespace PixelSortApp
             }
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private void SaveImage(System.Drawing.Image i)
         {
             SaveFileDialog dialog = new SaveFileDialog();
 
@@ -156,15 +158,7 @@ namespace PixelSortApp
 
             dialog.ShowDialog();
 
-
-
-            var img = NewImage.Source;
-            using (var fileStream = new FileStream(dialog.FileName, FileMode.Create))
-            {
-                BitmapEncoder encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create((BitmapImage)img));
-                encoder.Save(fileStream);
-            }
+            i.Save(dialog.FileName);
         }
 
         private void LoopButton_Click(object sender, RoutedEventArgs e)
@@ -176,6 +170,23 @@ namespace PixelSortApp
         {
             oldImage = newImage;
             OldImage.Source = Convert(oldImage);
+        }
+
+        private void RotateMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            oldImage.RotateFlip(RotateFlipType.Rotate90FlipNone);
+
+            OldImage.Source = Convert(oldImage);
+        }
+
+        private void SaveOldMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            SaveImage(oldImage);
+        }
+
+        private void SaveNewMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            SaveImage(newImage);
         }
     }
 }
