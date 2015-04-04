@@ -21,6 +21,7 @@ using System.Net.Mime;
 using System.Threading;
 using System.Windows.Shell;
 using AForge.Genetic;
+using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using PixelSort;
 using TSP;
@@ -40,6 +41,8 @@ namespace PixelSortApp
         private Thread sorterThread;
 
         private int numPasses;
+
+        private int passesToComplete;
         public MainWindow()
         {
             InitializeComponent();
@@ -79,7 +82,7 @@ namespace PixelSortApp
                 sorterThread = null;
                 numPasses++;
 
-                if (numPasses < int.Parse(PassesTextBox.Text))
+                if (numPasses < passesToComplete)
                 {
                     LoopImages();
                     RunOnePass();
@@ -135,17 +138,33 @@ namespace PixelSortApp
 
         void RunOnePass()
         {
+            int iterations;
+            int chunks;
+
             if (sorterThread == null)
             {
-                Bitmap b = new Bitmap(oldImage);
-                int iterations = int.Parse(IterationsTextBox.Text);
-                int chunks = int.Parse(ChunksTextBox.Text);
-
-                sorterThread = new Thread(() =>
+                if (int.TryParse(IterationsTextBox.Text, out iterations) && int.TryParse(ChunksTextBox.Text, out chunks) && int.TryParse(PassesTextBox.Text,out passesToComplete))
                 {
-                    sorter.SortVertical(b, iterations,chunks);
-                });
-                sorterThread.Start();
+                    if (chunks >= 1 && iterations >= 1)
+                    {
+
+                        Bitmap b = new Bitmap(oldImage);
+
+                        sorterThread = new Thread(() =>
+                        {
+                            sorter.SortVertical(b, iterations, chunks);
+                        });
+                        sorterThread.Start();
+                    }
+                    else
+                    {
+                        this.ShowMessageAsync("Invalid input", "Input parameters are not within bounds.");
+                    }
+                }
+                else
+                {
+                    this.ShowMessageAsync("Invalid input", "Input parameters failed to parse.");
+                }
             }
         }
 
