@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +18,7 @@ namespace PixelSortApp
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
-        static List<Color> SortBuffer(Color[] buffer, int iterations)
+        static List<Color> SortBuffer(Color[] buffer, int iterations,SortMode mode)
         {
             int citiesCount = buffer.Count();
 
@@ -33,50 +35,66 @@ namespace PixelSortApp
                 c++;
             }
 
-
-            // create fitness function
-            TSPFitnessFunction fitnessFunction = new TSPFitnessFunction(map);
-            // create population
-            Population population = new Population(100,
-                    new TSPChromosome(map),
-                    fitnessFunction,
-                    new RankSelection());
-
-            // path
-            double[,] path = new double[citiesCount + 1, 4];
-
-            for (int i = 0; i < iterations; i++)
-            {
-                population.RunEpoch();
-            }
-
-            ushort[] bestValue = ((PermutationChromosome)population.BestChromosome).Value;
             var outBuffer = new List<Color>();
 
-            for (int j = 0; j < citiesCount; j++)
+            switch (mode)
             {
-                path[j, 0] = map[bestValue[j], 0];
-                path[j, 1] = map[bestValue[j], 1];
-                path[j, 2] = map[bestValue[j], 2];
+                case SortMode.Genetic:
+                    // create fitness function
+                    TSPFitnessFunction fitnessFunction = new TSPFitnessFunction(map);
+                    // create population
+                    Population population = new Population(100,
+                        new TSPChromosome(map),
+                        fitnessFunction,
+                        new RankSelection());
 
-                YUV yuv = new YUV { Y = path[j, 0], U = path[j, 1], V = path[j, 2] };
+                    // path
+                    double[,] path = new double[citiesCount + 1, 4];
 
-                outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
+                    for (int i = 0; i < iterations; i++)
+                    {
+                        population.RunEpoch();
+                    }
+
+                    ushort[] bestValue = ((PermutationChromosome)population.BestChromosome).Value;
+
+                    for (int j = 0; j < citiesCount; j++)
+                    {
+                        path[j, 0] = map[bestValue[j], 0];
+                        path[j, 1] = map[bestValue[j], 1];
+                        path[j, 2] = map[bestValue[j], 2];
+
+                        YUV yuv = new YUV { Y = path[j, 0], U = path[j, 1], V = path[j, 2] };
+
+                        outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
+                    }
+                    break;
+                case SortMode.NearestNeighbour:
+                    var nn = new NearestNeighbour(map);
+
+                    var nnpath = nn.FindPath();
+
+
+                    for (int i = 0; i < citiesCount; i++)
+                    {
+                        YUV yuv = new YUV { Y = nnpath[i, 0], U = nnpath[i, 1], V = nnpath[i, 2] };
+
+                        outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
+                    }
+                    break;
             }
-            path[citiesCount, 0] = map[bestValue[0], 0];
-            path[citiesCount, 1] = map[bestValue[0], 1];
-            path[citiesCount, 2] = map[bestValue[0], 2];
-
-
 
             return outBuffer;
 
 
         }
 
-        public void SortVertical(Bitmap b, int iterations,int chunkNum)
+        public void SortVertical(Bitmap b, int iterations,int chunkNum,SortMode mode)
         {
             Bitmap o = (Bitmap)b.Clone();
+
+            Stopwatch updaterStopwatch = new Stopwatch();
+            updaterStopwatch.Start();
 
             int chunkSize = (int)Math.Ceiling((double)b.Height/chunkNum);
 
@@ -101,7 +119,7 @@ namespace PixelSortApp
                         var buffer = samples.ToArray();
 
                         int y2 = 0;
-                        foreach (var color in SortBuffer(buffer, iterations))
+                        foreach (var color in SortBuffer(buffer, iterations,mode))
                         {
                             if (y2 + yoffset < b.Height)
                                 o.SetPixel(x, y2 + yoffset, color);
@@ -113,10 +131,20 @@ namespace PixelSortApp
                     }
                 }
 
-                OnProgressUpdate((double)x / b.Width, o);
+                if (updaterStopwatch.ElapsedMilliseconds > 50)
+                {
+                    OnProgressUpdate((double)x / b.Width, o);
+                    updaterStopwatch.Restart();
+                }
 
             }
             OnFinish(o);
         }
+
+    }
+    public enum SortMode
+    {
+        Genetic,
+        NearestNeighbour
     }
 }

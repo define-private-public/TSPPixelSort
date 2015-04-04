@@ -74,6 +74,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="GeneticTSP.cs" />
+    <Compile Include="NearestNeighbour.cs" />
     <Compile Include="Sorter.cs" />
     <Compile Include="YUV.cs" />
     <Page Include="MainWindow.xaml">

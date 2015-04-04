@@ -24,7 +24,14 @@
                 <Label VerticalAlignment="Bottom">Chunks</Label>
                 <TextBox x:Name="ChunksTextBox" Height="24" Text="1"/>
             </DockPanel>
-            <DockPanel Height="270"/>
+            <DockPanel  Margin="10,10,10,0">
+                <Label VerticalAlignment="Bottom">Mode</Label>
+                <ComboBox Name="ModeComboBox" SelectedIndex="0">
+                    <ComboBoxItem>Genetic</ComboBoxItem>
+                    <ComboBoxItem>Nearest Neighbour</ComboBoxItem>
+                </ComboBox>
+            </DockPanel>
+            <DockPanel Height="230"/>
             <DockPanel  Margin="10,10,10,0" VerticalAlignment="Bottom" LastChildFill="False" HorizontalAlignment="Left">
                 <Button x:Name="LoadButton" Height="24" Width="50" Margin="0,0,10,0" Click="LoadButton_Click">Load</Button>
                 <Button x:Name="RunButton" Height="24" Width="50" Margin="0,0,10,0" Click="RunButton_Click">Run</Button>
@@ -36,6 +43,7 @@
             <Image.ContextMenu>
                 <ContextMenu>
                     <MenuItem x:Name="RotateMenuItem" Header="Rotate 90°" Click="RotateMenuItem_OnClick"/>
+                    <MenuItem x:Name="RescaleMenuItem" Header="Rescale" Click="RescaleMenuItem_OnClick"/>
                     <MenuItem x:Name="SaveOldMenuItem" Header="Save" Click="SaveOldMenuItem_OnClick"/>
                 </ContextMenu>
             </Image.ContextMenu>

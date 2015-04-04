@@ -40,6 +40,8 @@ namespace PixelSortApp
         Sorter sorter = new Sorter();
         private Thread sorterThread;
 
+        private Stopwatch stopwatch=new Stopwatch();
+
         private int numPasses;
 
         private int passesToComplete;
@@ -87,6 +89,11 @@ namespace PixelSortApp
                     LoopImages();
                     RunOnePass();
                 }
+                else
+                {
+                    stopwatch.Stop();
+                    this.ShowMessageAsync("Elapsed Time", stopwatch.ElapsedMilliseconds + "ms");
+                }
             }
         }
 
@@ -132,6 +139,8 @@ namespace PixelSortApp
 
         private void RunButton_Click(object sender, RoutedEventArgs e)
         {
+            stopwatch.Reset();
+            stopwatch.Start();
             numPasses = 0;
             RunOnePass();
         }
@@ -141,18 +150,24 @@ namespace PixelSortApp
             int iterations;
             int chunks;
 
+            SortMode mode;
+
             if (sorterThread == null)
             {
-                if (int.TryParse(IterationsTextBox.Text, out iterations) && int.TryParse(ChunksTextBox.Text, out chunks) && int.TryParse(PassesTextBox.Text,out passesToComplete))
+                if (int.TryParse(IterationsTextBox.Text, out iterations)
+                    && int.TryParse(ChunksTextBox.Text, out chunks) 
+                    && int.TryParse(PassesTextBox.Text,out passesToComplete))
                 {
                     if (chunks >= 1 && iterations >= 1)
                     {
+                        mode = ModeComboBox.Text == "Genetic" ? SortMode.Genetic : SortMode.NearestNeighbour;
+
 
                         Bitmap b = new Bitmap(oldImage);
 
                         sorterThread = new Thread(() =>
                         {
-                            sorter.SortVertical(b, iterations, chunks);
+                            sorter.SortVertical(b, iterations, chunks,mode);
                         });
                         sorterThread.Start();
                     }
@@ -206,6 +221,26 @@ namespace PixelSortApp
         private void SaveNewMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             SaveImage(newImage);
+        }
+
+        private async void RescaleMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var w = await this.ShowInputAsync("Rescale", "Width",new MetroDialogSettings{AnimateShow = true,AnimateHide = false});
+            var h = await this.ShowInputAsync("Rescale", "Height", new MetroDialogSettings { AnimateShow = false, AnimateHide = true });
+
+            int width;
+            int height;
+
+            if (int.TryParse(w, out width) && int.TryParse(h, out height))
+            {
+                oldImage = new Bitmap(oldImage, new System.Drawing.Size(width, height));
+
+                OldImage.Source = Convert(oldImage);
+            }
+            else
+            {
+                await this.ShowMessageAsync("Error", "Failed to parse input width/height");
+            }
         }
     }
 }
