@@ -1,3 +1,7 @@
+## Download:
+
+https://github.com/ruarai/TSPPixelSort/releases/latest
+
 # TSPPixelSort
 Pixel sorting using a genetic TSP technique to produce more accurate and interesting results.
 
