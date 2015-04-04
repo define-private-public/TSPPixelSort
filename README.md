@@ -12,5 +12,3 @@ Pixel sorting using a genetic TSP technique to produce more accurate and interes
 
 (Source Image: http://www.stuckincustoms.com/2014/02/18/benjamin-von-wong-for-the-arcanum/)
 
-Small resolution input, lots of chunks, post-processed in photoshop
-
