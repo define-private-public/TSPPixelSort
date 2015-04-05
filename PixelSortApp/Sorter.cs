@@ -19,7 +19,7 @@ namespace PixelSortApp
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
-        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode)
+        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode,int movementScale = 1)
         {
             int citiesCount = buffer.Count();
 
@@ -32,7 +32,7 @@ namespace PixelSortApp
                 map[c, 0] = yuv.Y;
                 map[c, 1] = yuv.U;
                 map[c, 2] = yuv.V;
-                map[c, 3] = Array.IndexOf(buffer, color);
+                map[c, 3] = Array.IndexOf(buffer, color) * movementScale;
                 c++;
             }
 
@@ -96,7 +96,7 @@ namespace PixelSortApp
         private int bWidth;
         private int bHeight;
 
-        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode)
+        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode,int moveScale)
         {
             inputArray = bitmapToArray(b);
             outputArray = bitmapToArray(b);
@@ -109,7 +109,7 @@ namespace PixelSortApp
 
             int chunkSize = (int)Math.Ceiling((double)b.Height / chunkNum);
 
-            Timer updater = new Timer(OnUpdate,null,50,50);
+            Timer updater = new Timer(OnUpdate,null,1000,1000);
 
             Parallel.For(0, b.Width, x =>
             {
@@ -126,13 +126,13 @@ namespace PixelSortApp
                         else
                             break;
                     }
-
+                    
                     if (samples.Count > 2)
                     {
                         var buffer = samples.ToArray();
 
                         int y2 = 0;
-                        foreach (var color in SortBuffer(buffer, iterations, mode))
+                        foreach (var color in SortBuffer(buffer, iterations, mode, moveScale))
                         {
                             if (y2 + yoffset < bHeight)
                                 outputArray[x, y2 + yoffset] = color;
@@ -148,12 +148,23 @@ namespace PixelSortApp
 
             });
 
+            updating = true;//stop updater from trying to do things
+
             OnFinish(arrayToBitmap(outputArray));
         }
 
+        private int lastProgress = 0;
+        private bool updating = false;
+
         private void OnUpdate(object data)
         {
-            OnProgressUpdate((double)progress/bWidth,arrayToBitmap(outputArray));
+            if (progress > lastProgress && !updating)
+            {
+                updating = true;
+                OnProgressUpdate((double) progress/bWidth, arrayToBitmap(outputArray));
+                lastProgress = progress;
+                updating = false;
+            }
         }
 
         Bitmap arrayToBitmap(Color[,] array)

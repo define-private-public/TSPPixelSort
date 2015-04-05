@@ -147,6 +147,7 @@ namespace PixelSortApp
         {
             int iterations;
             int chunks;
+            int moveScale;
 
             SortMode mode;
             sorter = new Sorter();
@@ -157,7 +158,8 @@ namespace PixelSortApp
             {
                 if (int.TryParse(IterationsTextBox.Text, out iterations)
                     && int.TryParse(ChunksTextBox.Text, out chunks) 
-                    && int.TryParse(PassesTextBox.Text,out passesToComplete))
+                    && int.TryParse(PassesTextBox.Text,out passesToComplete)
+                    && int.TryParse(MoveScaleTextBox.Text,out moveScale))
                 {
                     if (chunks >= 1 && iterations >= 1)
                     {
@@ -168,7 +170,7 @@ namespace PixelSortApp
 
                         sorterThread = new Thread(() =>
                         {
-                            sorter.SortVertical(b, iterations, chunks,mode);
+                            sorter.SortVertical(b, iterations, chunks, mode, moveScale);
                         });
                         sorterThread.Start();
                     }
@@ -241,6 +243,19 @@ namespace PixelSortApp
             else
             {
                 await this.ShowMessageAsync("Error", "Failed to parse input width/height");
+            }
+        }
+
+        private void ModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch ((string)((ComboBoxItem)e.AddedItems[0]).Content)
+            {
+                case "Genetic":
+                    IterationsTextBox.IsEnabled = true;
+                    break;
+                case "Nearest Neighbour":
+                    IterationsTextBox.IsEnabled = false;
+                    break;
             }
         }
     }
