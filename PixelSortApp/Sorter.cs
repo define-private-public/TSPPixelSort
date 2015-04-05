@@ -13,9 +13,9 @@ using System.Threading;
 
 namespace PixelSortApp
 {
-    internal delegate void OnProgressUpdateEvent(double progress,Bitmap update);
-    internal delegate void OnFinishEvent(Bitmap output);
-    class Sorter
+    public delegate void OnProgressUpdateEvent(double progress, Bitmap update);
+    public delegate void OnFinishEvent(Bitmap output);
+    public class Sorter
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
