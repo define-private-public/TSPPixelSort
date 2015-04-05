@@ -37,7 +37,7 @@ namespace PixelSortApp
         private System.Drawing.Image oldImage;
         private System.Drawing.Image newImage;
 
-        Sorter sorter = new Sorter();
+        private Sorter sorter;
         private Thread sorterThread;
 
         private Stopwatch stopwatch=new Stopwatch();
@@ -49,20 +49,18 @@ namespace PixelSortApp
         {
             InitializeComponent();
             RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.NearestNeighbor);
-
-            sorter.OnProgressUpdate += Sorter_OnProgressUpdate;
-            sorter.OnFinish += sorter_OnFinish;
         }
 
         void sorter_OnFinish(Bitmap output)
         {
             Dispatcher.Invoke(() =>
             {
-                UpdateProgress(1, output);
+                //update with 2 to indicate finish
+                UpdateProgress(2, output);
             }); 
         }
 
-        void Sorter_OnProgressUpdate(double percentile, Bitmap updatedBitmap)
+        void Sorter_OnProgressUpdate(double percentile,Bitmap updatedBitmap)
         {
             Dispatcher.Invoke(() =>
             {
@@ -78,7 +76,7 @@ namespace PixelSortApp
             newImage = updatedBitmap;
             NewImage.Source = Convert(newImage);
 
-            if (percentile == 1)
+            if (percentile == 2)
             {
                 TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
                 sorterThread = null;
@@ -151,6 +149,9 @@ namespace PixelSortApp
             int chunks;
 
             SortMode mode;
+            sorter = new Sorter();
+            sorter.OnProgressUpdate += Sorter_OnProgressUpdate;
+            sorter.OnFinish += sorter_OnFinish;
 
             if (sorterThread == null)
             {

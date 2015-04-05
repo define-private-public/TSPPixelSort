@@ -9,16 +9,17 @@ using AForge.Genetic;
 using PixelSort;
 using TSP;
 using System.Drawing;
+using System.Threading;
 
 namespace PixelSortApp
 {
-    internal delegate void OnProgressUpdateEvent(double percentile,Bitmap update);
+    internal delegate void OnProgressUpdateEvent(double progress,Bitmap update);
     internal delegate void OnFinishEvent(Bitmap output);
     class Sorter
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
-        static List<Color> SortBuffer(Color[] buffer, int iterations,SortMode mode)
+        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode)
         {
             int citiesCount = buffer.Count();
 
@@ -89,27 +90,39 @@ namespace PixelSortApp
 
         }
 
-        public void SortVertical(Bitmap b, int iterations,int chunkNum,SortMode mode)
+        private Color[,] inputArray;
+        private Color[,] outputArray;
+        private int progress;
+        private int bWidth;
+        private int bHeight;
+
+        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode)
         {
-            Bitmap o = (Bitmap)b.Clone();
+            inputArray = bitmapToArray(b);
+            outputArray = bitmapToArray(b);
+
+            bHeight = b.Height;
+            bWidth = b.Width;
 
             Stopwatch updaterStopwatch = new Stopwatch();
             updaterStopwatch.Start();
 
-            int chunkSize = (int)Math.Ceiling((double)b.Height/chunkNum);
+            int chunkSize = (int)Math.Ceiling((double)b.Height / chunkNum);
 
-            for (int x = 0; x < b.Width; x++)
+            Timer updater = new Timer(OnUpdate,null,50,50);
+
+            Parallel.For(0, b.Width, x =>
             {
                 for (int yc = 0; yc < chunkNum; yc++)
                 {
-                    int yoffset = yc*chunkSize;
+                    int yoffset = yc * chunkSize;
 
                     var samples = new List<Color>();
 
                     for (int y = 0; y < chunkSize; y++)
                     {
-                        if (y + yoffset < b.Height)
-                            samples.Add(b.GetPixel(x, y + yoffset));
+                        if (y + yoffset < bHeight)
+                            samples.Add(inputArray[x, y + yoffset]);
                         else
                             break;
                     }
@@ -119,10 +132,10 @@ namespace PixelSortApp
                         var buffer = samples.ToArray();
 
                         int y2 = 0;
-                        foreach (var color in SortBuffer(buffer, iterations,mode))
+                        foreach (var color in SortBuffer(buffer, iterations, mode))
                         {
-                            if (y2 + yoffset < b.Height)
-                                o.SetPixel(x, y2 + yoffset, color);
+                            if (y2 + yoffset < bHeight)
+                                outputArray[x, y2 + yoffset] = color;
                             else
                                 break;
                             y2++;
@@ -130,15 +143,47 @@ namespace PixelSortApp
 
                     }
                 }
+                progress++;
 
-                if (updaterStopwatch.ElapsedMilliseconds > 50)
+
+            });
+
+            OnFinish(arrayToBitmap(outputArray));
+        }
+
+        private void OnUpdate(object data)
+        {
+            OnProgressUpdate((double)progress/bWidth,arrayToBitmap(outputArray));
+        }
+
+        Bitmap arrayToBitmap(Color[,] array)
+        {
+            Bitmap b = new Bitmap(array.GetLength(0), array.GetLength(1));
+
+
+            for (int x = 0; x < array.GetLength(0); x++)
+            {
+                for (int y = 0; y < array.GetLength(1); y++)
                 {
-                    OnProgressUpdate((double)x / b.Width, o);
-                    updaterStopwatch.Restart();
+                    b.SetPixel(x, y, array[x, y]);
                 }
-
             }
-            OnFinish(o);
+
+            return b;
+        }
+        Color[,] bitmapToArray(Bitmap b)
+        {
+            var array = new Color[b.Width, b.Height];
+
+            for (int x = 0; x < b.Width; x++)
+            {
+                for (int y = 0; y < b.Height; y++)
+                {
+                    array[x, y] = b.GetPixel(x, y);
+                }
+            }
+
+            return array;
         }
 
     }

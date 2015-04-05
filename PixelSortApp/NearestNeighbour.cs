@@ -42,13 +42,13 @@ namespace PixelSortApp
 
         public void recursivePath(int cityNum)
         {
-            if (numVisited >= map.Length / 4)
+            if (numVisited >= map.GetLength(0))
                 return;
 
             int bestCity = 0;
             double bestDistance = double.PositiveInfinity;
 
-            for (int cityB = 0; cityB < map.Length / 4; cityB++)
+            for (int cityB = 0; cityB < map.GetLength(0); cityB++)
             {
                 if (!visited[cityB])
                 {
