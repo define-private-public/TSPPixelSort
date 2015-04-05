@@ -12,6 +12,7 @@ namespace PixelSortApp
         private bool[] visited;
         private List<int> path = new List<int>();
         private int numVisited = 1;
+        private int cityCount;
 
         public NearestNeighbour(double[,] _map)
         {
@@ -22,6 +23,9 @@ namespace PixelSortApp
         public double[,] FindPath()
         {
             visited[0] = true;
+            cityCount = map.GetLength(0);
+
+            path.Add(0);
             recursivePath(0);
 
             double[,] citiesPath = new double[map.Length,4];
@@ -42,7 +46,7 @@ namespace PixelSortApp
 
         public void recursivePath(int cityNum)
         {
-            if (numVisited >= map.GetLength(0))
+            if (numVisited > cityCount + 1)
                 return;
 
             int bestCity = 0;
