@@ -258,5 +258,28 @@ namespace PixelSortApp
                     break;
             }
         }
+
+
+        private void ShowTmpImage(string fileName, System.Drawing.Image i)
+        {
+            string tmpPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
+
+            if (File.Exists(tmpPath))
+                File.Delete(tmpPath);
+
+            i.Save(tmpPath);
+
+            Process.Start(tmpPath);
+        }
+
+        private void OldImage_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            ShowTmpImage("oldImage.png", oldImage);
+        }
+
+        private void NewImage_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            ShowTmpImage("newImage.png", newImage);
+        }
     }
 }

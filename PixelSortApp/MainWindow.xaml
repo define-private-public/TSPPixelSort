@@ -43,7 +43,7 @@
             </DockPanel>
         </StackPanel>
 
-        <Image x:Name="OldImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="1">
+        <Image x:Name="OldImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="1" MouseDown="OldImage_MouseDown" >
             <Image.ContextMenu>
                 <ContextMenu>
                     <MenuItem x:Name="RotateMenuItem" Header="Rotate 90°" Click="RotateMenuItem_OnClick"/>
@@ -52,7 +52,7 @@
                 </ContextMenu>
             </Image.ContextMenu>
         </Image>
-        <Image x:Name="NewImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="2">
+        <Image x:Name="NewImage" HorizontalAlignment="Right" Height="400" Margin="0,10,10,0" VerticalAlignment="Top" Width="400" Grid.Column="2" MouseDown="NewImage_MouseDown">
             <Image.ContextMenu>
                 <ContextMenu>
                     <MenuItem x:Name="SaveNewMenuItem" Header="Save" Click="SaveNewMenuItem_OnClick"/>
