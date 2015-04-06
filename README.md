@@ -5,7 +5,7 @@ https://github.com/ruarai/TSPPixelSort/releases/latest
 # TSPPixelSort
 Pixel sorting using a genetic TSP technique to produce more accurate and interesting results.
 
-![input](http://i.imgur.com/lG5BeSR.png)
+![input](http://i.imgur.com/GXLJ1r2.png)
 
 #Examples
 ![input](http://i.imgur.com/oUQ46SP.png)
