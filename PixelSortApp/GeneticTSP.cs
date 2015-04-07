@@ -1,5 +1,6 @@
 ﻿using System;
 using AForge.Genetic;
+using PixelSortApp;
 
 namespace TSP
 {
@@ -8,12 +9,12 @@ namespace TSP
     /// </summary>
     public class TSPChromosome : PermutationChromosome
     {
-        private double[,] map = null;
+        private Pixel[] map = null;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public TSPChromosome(double[,] map)
+        public TSPChromosome(Pixel[] map)
             : base(map.GetLength(0))
         {
             this.map = map;
@@ -113,17 +114,8 @@ namespace TSP
                 {
                     // both candidates are valid
                     // select one closest city
-                    double dx1 = map[next1, 0] - map[prev, 0];
-                    double dy1 = map[next1, 1] - map[prev, 1];
-                    double dz1 = map[next1, 2] - map[prev, 2];
-                    double dn1 = map[next1, 3] - map[prev, 3];
 
-                    double dx2 = map[next2, 0] - map[prev, 0];
-                    double dy2 = map[next2, 1] - map[prev, 1];
-                    double dz2 = map[next2, 2] - map[prev, 2];
-                    double dn2 = map[next2, 3] - map[prev, 3];
-
-                    prev = (Math.Sqrt(dx1 * dx1 + dy1 * dy1 + dz1 * dz1 + dn1 * dn1) < Math.Sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2 + dn2 * dn2)) ? next1 : next2;
+                    prev = (Pixel.GetDistance(map[next1], map[prev]) < Pixel.GetDistance(map[next2], map[prev])) ? next1 : next2;
                 }
                 else if (!(valid1 || valid2))
                 {
@@ -164,10 +156,10 @@ namespace TSP
     public class TSPFitnessFunction : IFitnessFunction
     {
         // map
-        private double[,] map = null;
+        private Pixel[] map = null;
 
         // Constructor
-        public TSPFitnessFunction(double[,] map)
+        public TSPFitnessFunction(Pixel[] map)
         {
             this.map = map;
         }
@@ -207,11 +199,7 @@ namespace TSP
             int curr = path[path.Length - 1];
 
             // calculate distance between the last and the first city
-            double dx = map[curr, 0] - map[prev, 0];
-            double dy = map[curr, 1] - map[prev, 1];
-            double dz = map[curr, 2] - map[prev, 2];
-            double dn = map[curr, 3] - map[prev, 3];
-            double pathLength = Math.Sqrt(dx * dx + dy * dy + dz * dz + dn * dn);
+            double pathLength = Pixel.GetDistance(map[curr], map[prev]);
 
             // calculate the path length from the first city to the last
             for (int i = 1, n = path.Length; i < n; i++)
@@ -219,12 +207,7 @@ namespace TSP
                 // get current city
                 curr = path[i];
 
-                // calculate distance
-                dx = map[curr, 0] - map[prev, 0];
-                dy = map[curr, 1] - map[prev, 1];
-                dz = map[curr, 2] - map[prev, 2];
-                dn = map[curr, 3] - map[prev, 3];
-                pathLength += Math.Sqrt(dx * dx + dy * dy + dz * dz + dn * dn);
+                pathLength += Pixel.GetDistance(map[curr], map[prev]);
 
                 // put current city as previous
                 prev = curr;

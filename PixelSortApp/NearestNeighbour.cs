@@ -8,59 +8,56 @@ namespace PixelSortApp
 {
     class NearestNeighbour
     {
-        private double[,] map;
+        private Pixel[] map;
         private bool[] visited;
         private List<int> path = new List<int>();
         private int numVisited = 1;
         private int cityCount;
 
-        public NearestNeighbour(double[,] _map)
+        public NearestNeighbour(Pixel[] _map)
         {
             map = _map;
             visited = new bool[_map.Length];
         }
 
-        public double[,] FindPath()
+        //Find a path along a pixel array using nearest-neighbour TSP solution
+        public Pixel[] FindPath()
         {
+            //register the first city as visited
             visited[0] = true;
-            cityCount = map.GetLength(0);
-
             path.Add(0);
+
+            cityCount = map.Length;
+
+            //find a path
             recursivePath(0);
 
-            double[,] citiesPath = new double[map.Length,4];
+            //construct pixel array from path
+            Pixel[] citiesPath = new Pixel[map.Length];
 
             int i = 0;
             foreach (var p in path)
             {
-                citiesPath[i, 0] = map[p, 0];
-                citiesPath[i, 1] = map[p, 1];
-                citiesPath[i, 2] = map[p, 2];
-                citiesPath[i, 3] = map[p, 3];
+                citiesPath[i] = map[p];
                 i++;
             }
 
             return citiesPath;
-
         }
 
         public void recursivePath(int cityNum)
         {
-            if (numVisited > cityCount + 1)
+            if (numVisited >= cityCount)
                 return;
 
             int bestCity = 0;
             double bestDistance = double.PositiveInfinity;
 
-            for (int cityB = 0; cityB < map.GetLength(0); cityB++)
+            for (int cityB = 0; cityB < map.Length; cityB++)
             {
                 if (!visited[cityB])
                 {
-                    double dx = map[cityNum, 0] - map[cityB, 0];
-                    double dy = map[cityNum, 1] - map[cityB, 1];
-                    double dz = map[cityNum, 2] - map[cityB, 2];
-                    double dn = map[cityNum, 3] - map[cityB, 3];
-                    double pathLength = Math.Sqrt(dx*dx + dy*dy + dz*dz + dn*dn);
+                    double pathLength = Pixel.GetDistance(map[cityNum], map[cityB]);
 
                     if (pathLength < bestDistance)
                     {

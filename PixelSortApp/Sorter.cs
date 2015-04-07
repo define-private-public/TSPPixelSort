@@ -23,20 +23,21 @@ namespace PixelSortApp
         {
             int citiesCount = buffer.Count();
 
-            var map = new double[citiesCount, 4];
+            var map = new Pixel[citiesCount];
             int c = 0;
             foreach (var color in buffer)
             {
                 var yuv = new YUV(color);
 
-                map[c, 0] = yuv.Y;
-                map[c, 1] = yuv.U;
-                map[c, 2] = yuv.V;
-                map[c, 3] = Array.IndexOf(buffer, color) * movementScale;
+                map[c].Y = yuv.Y;
+                map[c].U = yuv.U;
+                map[c].V = yuv.V;
+                map[c].OriginalLocation = c * movementScale;
                 c++;
             }
 
-            var outBuffer = new List<Color>();
+            // path
+            Pixel[] path = new Pixel[citiesCount];
 
             switch (mode)
             {
@@ -49,8 +50,6 @@ namespace PixelSortApp
                         fitnessFunction,
                         new RankSelection());
 
-                    // path
-                    double[,] path = new double[citiesCount + 1, 4];
 
                     for (int i = 0; i < iterations; i++)
                     {
@@ -61,30 +60,28 @@ namespace PixelSortApp
 
                     for (int j = 0; j < citiesCount; j++)
                     {
-                        path[j, 0] = map[bestValue[j], 0];
-                        path[j, 1] = map[bestValue[j], 1];
-                        path[j, 2] = map[bestValue[j], 2];
-
-                        YUV yuv = new YUV { Y = path[j, 0], U = path[j, 1], V = path[j, 2] };
-
-                        outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
+                        path[j] = map[bestValue[j]];
+                        path[j] = map[bestValue[j]];
+                        path[j] = map[bestValue[j]];
                     }
                     break;
                 case SortMode.NearestNeighbour:
                     var nn = new NearestNeighbour(map);
 
-                    var nnpath = nn.FindPath();
+                    path = nn.FindPath();
 
 
-                    for (int i = 0; i < citiesCount; i++)
-                    {
-                        YUV yuv = new YUV { Y = nnpath[i, 0], U = nnpath[i, 1], V = nnpath[i, 2] };
-
-                        outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
-                    }
                     break;
             }
 
+
+            var outBuffer = new List<Color>();
+            for (int i = 0; i < citiesCount; i++)
+            {
+                YUV yuv = new YUV { Y = path[i].Y, U = path[i].U, V = path[i].V };
+
+                outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
+            }
             return outBuffer;
 
 
@@ -104,9 +101,6 @@ namespace PixelSortApp
             bHeight = b.Height;
             bWidth = b.Width;
 
-            Stopwatch updaterStopwatch = new Stopwatch();
-            updaterStopwatch.Start();
-
             int chunkSize = (int)Math.Ceiling((double)b.Height / chunkNum);
 
             Timer updater = new Timer(OnUpdate,null,1000,1000);
@@ -122,7 +116,7 @@ namespace PixelSortApp
                     for (int y = 0; y < chunkSize; y++)
                     {
                         if (y + yoffset < bHeight)
-                            samples.Add(inputArray[x, y + yoffset]);
+                            samples.Add(inputArray[x, y + yoffset]);//locking
                         else
                             break;
                     }
@@ -135,7 +129,7 @@ namespace PixelSortApp
                         foreach (var color in SortBuffer(buffer, iterations, mode, moveScale))
                         {
                             if (y2 + yoffset < bHeight)
-                                outputArray[x, y2 + yoffset] = color;
+                                outputArray[x, y2 + yoffset] = color;//lots of locking
                             else
                                 break;
                             y2++;
@@ -198,9 +192,12 @@ namespace PixelSortApp
         }
 
     }
+
     public enum SortMode
     {
         Genetic,
         NearestNeighbour
     }
+
+    
 }
