@@ -39,6 +39,7 @@
             <DockPanel  Margin="10,10,10,0" VerticalAlignment="Bottom" LastChildFill="False" HorizontalAlignment="Left">
                 <Button x:Name="LoadButton" Height="24" Width="50" Margin="0,0,10,0" Click="LoadButton_Click">Load</Button>
                 <Button x:Name="RunButton" Height="24" Width="50" Margin="0,0,10,0" Click="RunButton_Click">Run</Button>
+                <Button x:Name="StopButton" Height="24" Width="50" Margin="0,0,10,0" Click="StopButton_OnClick">Stop</Button>
                 <Button x:Name="LoopButton" Height="24" Width="50" Click="LoopButton_Click" >Loop</Button>
             </DockPanel>
         </StackPanel>

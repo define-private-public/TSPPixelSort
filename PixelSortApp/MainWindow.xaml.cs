@@ -281,5 +281,14 @@ namespace PixelSortApp
         {
             ShowTmpImage("newImage.png", newImage);
         }
+
+        private void StopButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sorterThread != null)
+            {
+                sorterThread.Abort();
+                sorterThread = null;
+            }
+        }
     }
 }
