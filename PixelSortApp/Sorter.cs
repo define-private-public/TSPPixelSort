@@ -19,7 +19,7 @@ namespace PixelSortApp
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
-        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode,int movementScale = 1)
+        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode, int movementScale = 1)
         {
             int citiesCount = buffer.Count();
 
@@ -65,6 +65,7 @@ namespace PixelSortApp
                         path[j] = map[bestValue[j]];
                     }
                     break;
+                case SortMode.Downsample:
                 case SortMode.NearestNeighbour:
                     var nn = new NearestNeighbour(map);
 
@@ -93,17 +94,26 @@ namespace PixelSortApp
         private int bWidth;
         private int bHeight;
 
-        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode,int moveScale)
+        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode, int moveScale)
         {
-            inputArray = bitmapToArray(b);
-            outputArray = bitmapToArray(b);
-
             bHeight = b.Height;
             bWidth = b.Width;
 
-            int chunkSize = (int)Math.Ceiling((double)b.Height / chunkNum);
+            int chunkSize = (int)Math.Ceiling((double)bHeight / chunkNum);
 
-            Timer updater = new Timer(OnUpdate,null,1000,1000);
+            int newbHeight = chunkNum * 2;
+
+            inputArray = bitmapToArray(b);
+            if(mode == SortMode.Downsample)
+                outputArray = bitmapToArray(new Bitmap(bWidth, newbHeight));
+            else
+                outputArray = bitmapToArray(b);
+
+
+
+
+
+            Timer updater = new Timer(OnUpdate, null, 1000, 1000);
 
             Parallel.For(0, b.Width, x =>
             {
@@ -120,7 +130,8 @@ namespace PixelSortApp
                         else
                             break;
                     }
-                    
+
+
                     if (samples.Count > 2)
                     {
                         var buffer = samples.ToArray();
@@ -128,10 +139,25 @@ namespace PixelSortApp
                         int y2 = 0;
                         foreach (var color in SortBuffer(buffer, iterations, mode, moveScale))
                         {
-                            if (y2 + yoffset < bHeight)
-                                outputArray[x, y2 + yoffset] = color;//lots of locking
+                            if (mode == SortMode.Downsample)
+                            {
+                                int newYOffset = yc*2;
+                                if (y2 == 0)
+                                {
+                                    outputArray[x, newYOffset] = color;
+                                }
+                                else if (y2 == chunkSize - 1)
+                                {
+                                    outputArray[x, newYOffset + 1] = color;
+                                }
+                            }
                             else
-                                break;
+                            {
+                                if (y2 + yoffset < bHeight)
+                                        outputArray[x, y2 + yoffset] = color;//lots of locking
+                            }
+
+                            
                             y2++;
                         }
 
@@ -155,7 +181,7 @@ namespace PixelSortApp
             if (progress > lastProgress && !updating)
             {
                 updating = true;
-                OnProgressUpdate((double) progress/bWidth, arrayToBitmap(outputArray));
+                OnProgressUpdate((double)progress / bWidth, arrayToBitmap(outputArray));
                 lastProgress = progress;
                 updating = false;
             }
@@ -196,8 +222,9 @@ namespace PixelSortApp
     public enum SortMode
     {
         Genetic,
-        NearestNeighbour
+        NearestNeighbour,
+        Downsample
     }
 
-    
+
 }

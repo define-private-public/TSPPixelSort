@@ -163,7 +163,7 @@ namespace PixelSortApp
                 {
                     if (chunks >= 1 && iterations >= 1)
                     {
-                        mode = ModeComboBox.Text == "Genetic" ? SortMode.Genetic : SortMode.NearestNeighbour;
+                        mode = (SortMode)Enum.Parse(typeof (SortMode), ModeComboBox.Text);
 
 
                         Bitmap b = new Bitmap(oldImage);
@@ -254,6 +254,9 @@ namespace PixelSortApp
                     IterationsTextBox.IsEnabled = true;
                     break;
                 case "Nearest Neighbour":
+                    IterationsTextBox.IsEnabled = false;
+                    break;
+                case "Downsample":
                     IterationsTextBox.IsEnabled = false;
                     break;
             }

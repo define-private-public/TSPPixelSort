@@ -33,6 +33,7 @@
                 <ComboBox Name="ModeComboBox" SelectedIndex="0" SelectionChanged="ModeComboBox_SelectionChanged">
                     <ComboBoxItem>Genetic</ComboBoxItem>
                     <ComboBoxItem>Nearest Neighbour</ComboBoxItem>
+                    <ComboBoxItem>Downsample</ComboBoxItem>
                 </ComboBox>
             </DockPanel>
             <DockPanel Height="190"/>
