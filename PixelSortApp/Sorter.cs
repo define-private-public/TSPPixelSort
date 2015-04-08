@@ -27,6 +27,11 @@ namespace PixelSortApp
             int c = 0;
             foreach (var color in buffer)
             {
+                map[c].R = color.R;
+                map[c].G = color.G;
+                map[c].B = color.B;
+
+                //generate yuv colors for sorting purposes
                 var yuv = new YUV(color);
 
                 map[c].Y = yuv.Y;
@@ -79,9 +84,7 @@ namespace PixelSortApp
             var outBuffer = new List<Color>();
             for (int i = 0; i < citiesCount; i++)
             {
-                YUV yuv = new YUV { Y = path[i].Y, U = path[i].U, V = path[i].V };
-
-                outBuffer.Add(Color.FromArgb(yuv.R, yuv.G, yuv.B));
+                outBuffer.Add(Color.FromArgb(path[i].R, path[i].G, path[i].B));
             }
             return outBuffer;
 
