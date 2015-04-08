@@ -94,7 +94,7 @@ namespace PixelSortApp
         private int bWidth;
         private int bHeight;
 
-        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode, int moveScale)
+        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode, int moveScale,int bidirectional)
         {
             bHeight = b.Height;
             bWidth = b.Width;
@@ -168,9 +168,34 @@ namespace PixelSortApp
 
             });
 
+
             updating = true;//stop updater from trying to do things
 
-            OnFinish(arrayToBitmap(outputArray));
+            var outputBitmap = arrayToBitmap(outputArray);
+
+            if (bidirectional == 1)
+            {
+
+                outputBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+
+                SortVertical(outputBitmap,iterations,chunkNum,mode,moveScale,2);
+            }
+            else if (bidirectional == 2)
+            {
+                outputBitmap = arrayToBitmap(outputArray);
+
+                outputBitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+
+                OnFinish(outputBitmap);
+            }
+            else if(bidirectional == 0)
+            {
+                updating = true;//stop updater from trying to do things
+
+
+                OnFinish(outputBitmap);
+            }
+
         }
 
         private int lastProgress = 0;

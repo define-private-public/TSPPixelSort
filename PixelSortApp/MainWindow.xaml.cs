@@ -165,12 +165,13 @@ namespace PixelSortApp
                     {
                         mode = (SortMode)Enum.Parse(typeof (SortMode), ModeComboBox.Text);
 
+                        int biDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault() ? 1 : 0; 
 
                         Bitmap b = new Bitmap(oldImage);
 
                         sorterThread = new Thread(() =>
                         {
-                            sorter.SortVertical(b, iterations, chunks, mode, moveScale);
+                            sorter.SortVertical(b, iterations, chunks, mode, moveScale,biDirectional);
                         });
                         sorterThread.Start();
                     }

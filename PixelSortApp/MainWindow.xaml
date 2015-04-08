@@ -32,11 +32,14 @@
                 <Label VerticalAlignment="Bottom">Mode</Label>
                 <ComboBox Name="ModeComboBox" SelectedIndex="0" SelectionChanged="ModeComboBox_SelectionChanged">
                     <ComboBoxItem>Genetic</ComboBoxItem>
-                    <ComboBoxItem>Nearest Neighbour</ComboBoxItem>
+                    <ComboBoxItem>NearestNeighbour</ComboBoxItem>
                     <ComboBoxItem>Downsample</ComboBoxItem>
                 </ComboBox>
             </DockPanel>
-            <DockPanel Height="190"/>
+            <DockPanel  Margin="10,10,10,0">
+                <CheckBox Name="BidirectionalCheckBox">Bidirectional</CheckBox>
+            </DockPanel>
+            <DockPanel Height="160"/>
             <DockPanel  Margin="10,10,10,0" VerticalAlignment="Bottom" LastChildFill="False" HorizontalAlignment="Left">
                 <Button x:Name="LoadButton" Height="24" Width="50" Margin="0,0,10,0" Click="LoadButton_Click">Load</Button>
                 <Button x:Name="RunButton" Height="24" Width="50" Margin="0,0,10,0" Click="RunButton_Click">Run</Button>
