@@ -234,8 +234,19 @@ namespace PixelSortApp
 
             int width;
             int height;
+            if (w.EndsWith("%") && h.EndsWith("%"))
+            {
+                if (int.TryParse(w.Replace("%", ""), out width) && int.TryParse(h.Replace("%", ""), out height))
+                {
+                    width = (int)(oldImage.Width / (100d / width));
+                    height = (int)(oldImage.Height / (100d / height));
 
-            if (int.TryParse(w, out width) && int.TryParse(h, out height))
+                    oldImage = new Bitmap(oldImage, new System.Drawing.Size(width, height));
+
+                    OldImage.Source = Convert(oldImage);
+                }
+            }
+            else if (int.TryParse(w, out width) && int.TryParse(h, out height))
             {
                 oldImage = new Bitmap(oldImage, new System.Drawing.Size(width, height));
 
