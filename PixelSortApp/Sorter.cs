@@ -19,7 +19,7 @@ namespace PixelSortApp
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
-        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode, int movementScale = 1)
+        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode, double movementScale = 1d)
         {
             int citiesCount = buffer.Count();
 
@@ -41,20 +41,13 @@ namespace PixelSortApp
                 c++;
             }
 
-            // path
             Pixel[] path = new Pixel[citiesCount];
 
             switch (mode)
             {
                 case SortMode.Genetic:
-                    // create fitness function
                     TSPFitnessFunction fitnessFunction = new TSPFitnessFunction(map);
-                    // create population
-                    Population population = new Population(100,
-                        new TSPChromosome(map),
-                        fitnessFunction,
-                        new RankSelection());
-
+                    Population population = new Population(100, new TSPChromosome(map), fitnessFunction, new RankSelection());
 
                     for (int i = 0; i < iterations; i++)
                     {
@@ -75,8 +68,6 @@ namespace PixelSortApp
                     var nn = new NearestNeighbour(map);
 
                     path = nn.FindPath();
-
-
                     break;
             }
 
@@ -87,8 +78,6 @@ namespace PixelSortApp
                 outBuffer.Add(Color.FromArgb(path[i].R, path[i].G, path[i].B));
             }
             return outBuffer;
-
-
         }
 
         private Color[,] inputArray;
@@ -97,26 +86,33 @@ namespace PixelSortApp
         private int bWidth;
         private int bHeight;
 
-        public void SortVertical(Bitmap b, int iterations, int chunkNum, SortMode mode, int moveScale,int bidirectional)
+        public void Sort(Bitmap b, int iterations, int chunkSize, SortMode mode, double moveScale, bool biDirectional)
         {
-            bHeight = b.Height;
+            var bitmap = SortVertical(b, iterations, chunkSize, mode, moveScale);
+
+            if (biDirectional)
+            {
+                bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                bitmap = SortVertical(bitmap, iterations, chunkSize == bHeight ? bWidth : chunkSize, mode, moveScale);
+                bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+            }
+
+            OnFinish(bitmap);
+        }
+
+        public Bitmap SortVertical(Bitmap b, int iterations, int chunkSize, SortMode mode, double moveScale)
+        {
+            updating = false;
+
+            bHeight = (mode == SortMode.Downsample) ? (bHeight / chunkSize * 2) : (b.Height);
             bWidth = b.Width;
 
-            int chunkSize = (int)Math.Ceiling((double)bHeight / chunkNum);
-
-            int newbHeight = chunkNum * 2;
+            int chunkNum = bHeight / chunkSize;
 
             inputArray = bitmapToArray(b);
-            if(mode == SortMode.Downsample)
-                outputArray = bitmapToArray(new Bitmap(bWidth, newbHeight));
-            else
-                outputArray = bitmapToArray(b);
+            outputArray = bitmapToArray(b);
 
-
-
-
-
-            Timer updater = new Timer(OnUpdate, null, 1000, 1000);
+            //Timer updater = new Timer(OnUpdate, null, 1000, 1000);
 
             Parallel.For(0, b.Width, x =>
             {
@@ -144,7 +140,7 @@ namespace PixelSortApp
                         {
                             if (mode == SortMode.Downsample)
                             {
-                                int newYOffset = yc*2;
+                                int newYOffset = yc * 2;
                                 if (y2 == 0)
                                 {
                                     outputArray[x, newYOffset] = color;
@@ -157,10 +153,10 @@ namespace PixelSortApp
                             else
                             {
                                 if (y2 + yoffset < bHeight)
-                                        outputArray[x, y2 + yoffset] = color;//lots of locking
+                                    outputArray[x, y2 + yoffset] = color;//lots of locking
                             }
 
-                            
+
                             y2++;
                         }
 
@@ -176,28 +172,7 @@ namespace PixelSortApp
 
             var outputBitmap = arrayToBitmap(outputArray);
 
-            if (bidirectional == 1)
-            {
-
-                outputBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
-
-                SortVertical(outputBitmap,iterations,chunkNum,mode,moveScale,2);
-            }
-            else if (bidirectional == 2)
-            {
-                outputBitmap = arrayToBitmap(outputArray);
-
-                outputBitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
-
-                OnFinish(outputBitmap);
-            }
-            else if(bidirectional == 0)
-            {
-                updating = true;//stop updater from trying to do things
-
-
-                OnFinish(outputBitmap);
-            }
+            return outputBitmap;
 
         }
 

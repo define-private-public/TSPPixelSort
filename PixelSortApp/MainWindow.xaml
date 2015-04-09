@@ -21,7 +21,7 @@
                 <TextBox x:Name="PassesTextBox" Height="24" Text="1"/>
             </DockPanel>
             <DockPanel  Margin="10,10,10,0">
-                <Label VerticalAlignment="Bottom">Chunks</Label>
+                <Label VerticalAlignment="Bottom">Chunk Size</Label>
                 <TextBox x:Name="ChunksTextBox" Height="24" Text="1"/>
             </DockPanel>
             <DockPanel  Margin="10,10,10,0">

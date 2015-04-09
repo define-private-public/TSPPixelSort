@@ -55,8 +55,7 @@ namespace PixelSortApp
         {
             Dispatcher.Invoke(() =>
             {
-                //update with 2 to indicate finish
-                UpdateProgress(2, output);
+                UpdateProgress(1, output,true);
             }); 
         }
 
@@ -69,14 +68,14 @@ namespace PixelSortApp
 
         }
 
-        private void UpdateProgress(double percentile, Bitmap updatedBitmap)
+        private void UpdateProgress(double percentile, Bitmap updatedBitmap,bool finished = false)
         {
             TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
             TaskbarItemInfo.ProgressValue = percentile;
             newImage = updatedBitmap;
             NewImage.Source = Convert(newImage);
 
-            if (percentile == 2)
+            if (finished)
             {
                 TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
                 sorterThread = null;
@@ -105,10 +104,9 @@ namespace PixelSortApp
             {
                 oldImage = System.Drawing.Image.FromFile(o.FileName);
 
-                var oldWpfImage = Convert(oldImage);
+                OldImage.Source = Convert(oldImage);
 
-
-                OldImage.Source = oldWpfImage;
+                ChunksTextBox.Text = oldImage.Height.ToString();
 
             }
         }
@@ -146,8 +144,8 @@ namespace PixelSortApp
         void RunOnePass()
         {
             int iterations;
-            int chunks;
-            int moveScale;
+            int chunkSize;
+            double moveScale;
 
             SortMode mode;
             sorter = new Sorter();
@@ -157,21 +155,22 @@ namespace PixelSortApp
             if (sorterThread == null)
             {
                 if (int.TryParse(IterationsTextBox.Text, out iterations)
-                    && int.TryParse(ChunksTextBox.Text, out chunks) 
+                    && int.TryParse(ChunksTextBox.Text, out chunkSize) 
                     && int.TryParse(PassesTextBox.Text,out passesToComplete)
-                    && int.TryParse(MoveScaleTextBox.Text,out moveScale))
+                    && double.TryParse(MoveScaleTextBox.Text, out moveScale))
                 {
-                    if (chunks >= 1 && iterations >= 1)
+                    if (chunkSize >= 1 && iterations >= 1)
                     {
                         mode = (SortMode)Enum.Parse(typeof (SortMode), ModeComboBox.Text);
 
-                        int biDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault() ? 1 : 0; 
+                        bool biDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault(); 
+
 
                         Bitmap b = new Bitmap(oldImage);
 
                         sorterThread = new Thread(() =>
                         {
-                            sorter.SortVertical(b, iterations, chunks, mode, moveScale,biDirectional);
+                            sorter.Sort(b, iterations, chunkSize, mode, moveScale,biDirectional);
                         });
                         sorterThread.Start();
                     }
@@ -196,7 +195,8 @@ namespace PixelSortApp
 
             dialog.ShowDialog();
 
-            i.Save(dialog.FileName);
+            if(!string.IsNullOrEmpty(dialog.FileName))
+                i.Save(dialog.FileName);
         }
 
         private void LoopButton_Click(object sender, RoutedEventArgs e)
@@ -226,6 +226,7 @@ namespace PixelSortApp
         {
             SaveImage(newImage);
         }
+
 
         private async void RescaleMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
@@ -260,15 +261,13 @@ namespace PixelSortApp
 
         private void ModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            switch ((string)((ComboBoxItem)e.AddedItems[0]).Content)
+            switch ((SortMode)Enum.Parse(typeof(SortMode),((ComboBoxItem)e.AddedItems[0]).Content.ToString()))
             {
-                case "Genetic":
+                case SortMode.Genetic:
                     IterationsTextBox.IsEnabled = true;
                     break;
-                case "Nearest Neighbour":
-                    IterationsTextBox.IsEnabled = false;
-                    break;
-                case "Downsample":
+                case SortMode.Downsample:
+                case SortMode.NearestNeighbour:
                     IterationsTextBox.IsEnabled = false;
                     break;
             }
