@@ -17,6 +17,14 @@
                 <TextBox x:Name="IterationsTextBox" Height="24" Text="8"/>
             </DockPanel>
             <DockPanel  Margin="10,10,10,0">
+                <Label VerticalAlignment="Bottom">Genetic Technique</Label>
+                <ComboBox Name="GeneticModeComboBox" SelectedIndex="0" SelectionChanged="GeneticModeComboBox_OnSelectionChanged">
+                    <ComboBoxItem>Elite Selection</ComboBoxItem>
+                    <ComboBoxItem>Rank Selection</ComboBoxItem>
+                    <ComboBoxItem>Roulette Wheel</ComboBoxItem>
+                </ComboBox>
+            </DockPanel>
+            <DockPanel  Margin="10,10,10,0">
                 <Label VerticalAlignment="Bottom">Passes</Label>
                 <TextBox x:Name="PassesTextBox" Height="24" Text="1"/>
             </DockPanel>
@@ -39,7 +47,7 @@
             <DockPanel  Margin="10,10,10,0">
                 <CheckBox Name="BidirectionalCheckBox">Bidirectional</CheckBox>
             </DockPanel>
-            <DockPanel Height="160"/>
+            <DockPanel Height="120"/>
             <DockPanel  Margin="10,10,10,0" VerticalAlignment="Bottom" LastChildFill="False" HorizontalAlignment="Left">
                 <Button x:Name="LoadButton" Height="24" Width="50" Margin="0,0,10,0" Click="LoadButton_Click">Load</Button>
                 <Button x:Name="RunButton" Height="24" Width="50" Margin="0,0,10,0" Click="RunButton_Click">Run</Button>

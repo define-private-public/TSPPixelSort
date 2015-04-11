@@ -40,9 +40,11 @@ namespace PixelSortApp
         private Sorter sorter;
         private Thread sorterThread;
 
-        private Stopwatch stopwatch=new Stopwatch();
+        private Stopwatch stopwatch = new Stopwatch();
 
         private int numPasses;
+
+        private ISelectionMethod geneticMode;
 
         private int passesToComplete;
         public MainWindow()
@@ -55,11 +57,11 @@ namespace PixelSortApp
         {
             Dispatcher.Invoke(() =>
             {
-                UpdateProgress(1, output,true);
-            }); 
+                UpdateProgress(1, output, true);
+            });
         }
 
-        void Sorter_OnProgressUpdate(double percentile,Bitmap updatedBitmap)
+        void Sorter_OnProgressUpdate(double percentile, Bitmap updatedBitmap)
         {
             Dispatcher.Invoke(() =>
             {
@@ -68,7 +70,7 @@ namespace PixelSortApp
 
         }
 
-        private void UpdateProgress(double percentile, Bitmap updatedBitmap,bool finished = false)
+        private void UpdateProgress(double percentile, Bitmap updatedBitmap, bool finished = false)
         {
             TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
             TaskbarItemInfo.ProgressValue = percentile;
@@ -146,31 +148,32 @@ namespace PixelSortApp
             int iterations;
             int chunkSize;
             double moveScale;
-
             SortMode mode;
-            sorter = new Sorter();
-            sorter.OnProgressUpdate += Sorter_OnProgressUpdate;
-            sorter.OnFinish += sorter_OnFinish;
 
             if (sorterThread == null)
             {
                 if (int.TryParse(IterationsTextBox.Text, out iterations)
-                    && int.TryParse(ChunksTextBox.Text, out chunkSize) 
-                    && int.TryParse(PassesTextBox.Text,out passesToComplete)
+                    && int.TryParse(ChunksTextBox.Text, out chunkSize)
+                    && int.TryParse(PassesTextBox.Text, out passesToComplete)
                     && double.TryParse(MoveScaleTextBox.Text, out moveScale))
                 {
                     if (chunkSize >= 1 && iterations >= 1)
                     {
-                        mode = (SortMode)Enum.Parse(typeof (SortMode), ModeComboBox.Text);
+                        mode = (SortMode)Enum.Parse(typeof(SortMode), ModeComboBox.Text);
 
-                        bool biDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault(); 
+                        bool biDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault();
 
 
                         Bitmap b = new Bitmap(oldImage);
 
+
+                        sorter = new Sorter(iterations, chunkSize, mode, moveScale, biDirectional,geneticMode);
+                        sorter.OnProgressUpdate += Sorter_OnProgressUpdate;
+                        sorter.OnFinish += sorter_OnFinish;
+
                         sorterThread = new Thread(() =>
                         {
-                            sorter.Sort(b, iterations, chunkSize, mode, moveScale,biDirectional);
+                            sorter.Sort(b);
                         });
                         sorterThread.Start();
                     }
@@ -195,7 +198,7 @@ namespace PixelSortApp
 
             dialog.ShowDialog();
 
-            if(!string.IsNullOrEmpty(dialog.FileName))
+            if (!string.IsNullOrEmpty(dialog.FileName))
                 i.Save(dialog.FileName);
         }
 
@@ -230,7 +233,7 @@ namespace PixelSortApp
 
         private async void RescaleMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
-            var w = await this.ShowInputAsync("Rescale", "Width",new MetroDialogSettings{AnimateShow = true,AnimateHide = false});
+            var w = await this.ShowInputAsync("Rescale", "Width", new MetroDialogSettings { AnimateShow = true, AnimateHide = false });
             var h = await this.ShowInputAsync("Rescale", "Height", new MetroDialogSettings { AnimateShow = false, AnimateHide = true });
 
             int width;
@@ -256,19 +259,24 @@ namespace PixelSortApp
             else
             {
                 await this.ShowMessageAsync("Error", "Failed to parse input width/height");
+                return;
             }
+
+            ChunksTextBox.Text = oldImage.Height.ToString();
         }
 
         private void ModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            switch ((SortMode)Enum.Parse(typeof(SortMode),((ComboBoxItem)e.AddedItems[0]).Content.ToString()))
+            switch ((SortMode)Enum.Parse(typeof(SortMode), ((ComboBoxItem)e.AddedItems[0]).Content.ToString()))
             {
                 case SortMode.Genetic:
                     IterationsTextBox.IsEnabled = true;
+                    GeneticModeComboBox.IsEnabled = true;
                     break;
                 case SortMode.Downsample:
                 case SortMode.NearestNeighbour:
                     IterationsTextBox.IsEnabled = false;
+                    GeneticModeComboBox.IsEnabled = false;
                     break;
             }
         }
@@ -302,6 +310,22 @@ namespace PixelSortApp
             {
                 sorterThread.Abort();
                 sorterThread = null;
+            }
+        }
+
+        private void GeneticModeComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch (((ComboBoxItem)e.AddedItems[0]).Content.ToString())
+            {
+                case "Roulette Wheel":
+                    geneticMode = new RouletteWheelSelection();
+                    break;
+                case "Elite Selection":
+                    geneticMode = new EliteSelection();
+                    break;
+                case "Rank Selection":
+                    geneticMode = new RankSelection();
+                    break;
             }
         }
     }

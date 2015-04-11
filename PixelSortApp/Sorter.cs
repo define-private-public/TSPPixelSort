@@ -19,7 +19,34 @@ namespace PixelSortApp
     {
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
-        static List<Color> SortBuffer(Color[] buffer, int iterations, SortMode mode, double movementScale = 1d)
+
+        private Color[,] inputArray;
+        private Color[,] outputArray;
+        private int progress;
+        private int bWidth;
+        private int bHeight;
+
+        private int iterations;
+        private int chunkSize;
+        private SortMode mode;
+        private double moveScale;
+        private bool biDirectional;
+        private ISelectionMethod geneticMode;
+
+
+        private int lastProgress = 0;
+        private bool updating = false;
+
+        public Sorter(int iterations, int chunkSize, SortMode mode, double moveScale, bool biDirectional, ISelectionMethod geneticMode)
+        {
+            this.iterations = iterations;
+            this.chunkSize = chunkSize;
+            this.mode = mode;
+            this.moveScale = moveScale;
+            this.biDirectional = biDirectional;
+            this.geneticMode = geneticMode;
+        }
+        private List<Color> SortBuffer(Color[] buffer)
         {
             int citiesCount = buffer.Count();
 
@@ -37,7 +64,7 @@ namespace PixelSortApp
                 map[c].Y = yuv.Y;
                 map[c].U = yuv.U;
                 map[c].V = yuv.V;
-                map[c].OriginalLocation = c * movementScale;
+                map[c].OriginalLocation = c * moveScale;
                 c++;
             }
 
@@ -47,7 +74,7 @@ namespace PixelSortApp
             {
                 case SortMode.Genetic:
                     TSPFitnessFunction fitnessFunction = new TSPFitnessFunction(map);
-                    Population population = new Population(100, new TSPChromosome(map), fitnessFunction, new RankSelection());
+                    Population population = new Population(100, new TSPChromosome(map), fitnessFunction, geneticMode);
 
                     for (int i = 0; i < iterations; i++)
                     {
@@ -80,117 +107,129 @@ namespace PixelSortApp
             return outBuffer;
         }
 
-        private Color[,] inputArray;
-        private Color[,] outputArray;
-        private int progress;
-        private int bWidth;
-        private int bHeight;
 
-        public void Sort(Bitmap b, int iterations, int chunkSize, SortMode mode, double moveScale, bool biDirectional)
+        public void Sort(Bitmap b)
         {
-            var bitmap = SortVertical(b, iterations, chunkSize, mode, moveScale);
+            var bitmap = SortVertical(b);
 
             if (biDirectional)
             {
+                //rotate chunkSize too if neccessary
+                if (chunkSize == bHeight)
+                    chunkSize = bWidth;
+
                 bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
-                bitmap = SortVertical(bitmap, iterations, chunkSize == bHeight ? bWidth : chunkSize, mode, moveScale);
+                bitmap = SortVertical(bitmap);
                 bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
             }
 
             OnFinish(bitmap);
         }
 
-        public Bitmap SortVertical(Bitmap b, int iterations, int chunkSize, SortMode mode, double moveScale)
+        private Bitmap SortVertical(Bitmap b)
         {
+            //allow updater to continue
             updating = false;
 
+            //cant sort such a small chunk
+            if (chunkSize <= 2)
+                return b;
+
+            //determine new height, downsample mode will decrease it.
             bHeight = (mode == SortMode.Downsample) ? (bHeight / chunkSize * 2) : (b.Height);
             bWidth = b.Width;
 
             int chunkNum = bHeight / chunkSize;
 
+
+            //create arrays to store bitmap data, allow for locking multithreading.
             inputArray = bitmapToArray(b);
             outputArray = bitmapToArray(b);
 
-            //Timer updater = new Timer(OnUpdate, null, 1000, 1000);
+            //create updater timer
+            Timer updater = new Timer(OnUpdate, null, 1000, 1000);
 
+            //go through each vertical line
             Parallel.For(0, b.Width, x =>
             {
+                //go through each chunk
                 for (int yc = 0; yc < chunkNum; yc++)
                 {
                     int yoffset = yc * chunkSize;
 
-                    var samples = new List<Color>();
+                    var samples = new Color[chunkSize];
 
+                    //create samples
                     for (int y = 0; y < chunkSize; y++)
                     {
                         if (y + yoffset < bHeight)
-                            samples.Add(inputArray[x, y + yoffset]);//locking
+                            samples[y] = inputArray[x, y + yoffset];//locking
                         else
                             break;
                     }
 
+                    //sort the samples
+                    var sorted = SortBuffer(samples);
 
-                    if (samples.Count > 2)
+                    //enumerate through sorted samples and move them onto output
+                    for (int y = 0; y < sorted.Count; y++)
                     {
-                        var buffer = samples.ToArray();
-
-                        int y2 = 0;
-                        foreach (var color in SortBuffer(buffer, iterations, mode, moveScale))
+                        var color = sorted[y];
+                        if (mode == SortMode.Downsample)
                         {
-                            if (mode == SortMode.Downsample)
+                            //only care about first and last pixels
+                            int newYOffset = yc*2;
+                            if (y == 0)
                             {
-                                int newYOffset = yc * 2;
-                                if (y2 == 0)
-                                {
-                                    outputArray[x, newYOffset] = color;
-                                }
-                                else if (y2 == chunkSize - 1)
-                                {
-                                    outputArray[x, newYOffset + 1] = color;
-                                }
+                                outputArray[x, newYOffset] = color;
                             }
-                            else
+                            else if (y == chunkSize - 1)
                             {
-                                if (y2 + yoffset < bHeight)
-                                    outputArray[x, y2 + yoffset] = color;//lots of locking
+                                outputArray[x, newYOffset + 1] = color;
                             }
-
-
-                            y2++;
                         }
-
+                        else
+                        {
+                            if (y + yoffset < bHeight)
+                                outputArray[x, y + yoffset] = color; //lots of locking
+                        }
                     }
                 }
+
+                //update progress so updater recognises change
                 progress++;
-
-
             });
 
 
-            updating = true;//stop updater from trying to do things
+            //stop updater from trying to do things
+            updater.Dispose();
+            updating = true;
 
+            //return the array to bitmap form
             var outputBitmap = arrayToBitmap(outputArray);
 
             return outputBitmap;
 
         }
 
-        private int lastProgress = 0;
-        private bool updating = false;
 
         private void OnUpdate(object data)
         {
+            //check that progress has been made and updating isnt currently occuring
             if (progress > lastProgress && !updating)
             {
                 updating = true;
-                OnProgressUpdate((double)progress / bWidth, arrayToBitmap(outputArray));
+
+                double percentile = biDirectional ? ((double) progress / (bWidth+bHeight)) : ((double) progress/bWidth);
+
+                OnProgressUpdate(percentile, arrayToBitmap(outputArray));
+
                 lastProgress = progress;
                 updating = false;
             }
         }
 
-        Bitmap arrayToBitmap(Color[,] array)
+        static Bitmap arrayToBitmap(Color[,] array)
         {
             Bitmap b = new Bitmap(array.GetLength(0), array.GetLength(1));
 
@@ -205,7 +244,7 @@ namespace PixelSortApp
 
             return b;
         }
-        Color[,] bitmapToArray(Bitmap b)
+        static Color[,] bitmapToArray(Bitmap b)
         {
             var array = new Color[b.Width, b.Height];
 
