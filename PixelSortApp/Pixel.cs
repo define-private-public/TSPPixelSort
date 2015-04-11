@@ -9,9 +9,9 @@ namespace PixelSortApp
         public double U;
         public double V;
 
-        public int R;
-        public int G;
-        public int B;
+        public byte R;
+        public byte G;
+        public byte B;
 
         public double OriginalLocation;
 
