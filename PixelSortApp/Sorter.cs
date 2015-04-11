@@ -20,8 +20,8 @@ namespace PixelSortApp
         public event OnProgressUpdateEvent OnProgressUpdate;
         public event OnFinishEvent OnFinish;
 
-        private Color[,] inputArray;
-        private Color[,] outputArray;
+        private Color[][] inputArray;
+        private Color[][] outputArray;
         private int progress;
         private int bWidth;
         private int bHeight;
@@ -152,6 +152,9 @@ namespace PixelSortApp
             //go through each vertical line
             Parallel.For(0, b.Width, x =>
             {
+                //reduce locking by taking the column we are going to be using at the start
+                var column = inputArray[x];
+
                 //go through each chunk
                 for (int yc = 0; yc < chunkNum; yc++)
                 {
@@ -163,7 +166,7 @@ namespace PixelSortApp
                     for (int y = 0; y < chunkSize; y++)
                     {
                         if (y + yoffset < bHeight)
-                            samples[y] = inputArray[x, y + yoffset];//locking
+                            samples[y] = column[y + yoffset];
                         else
                             break;
                     }
@@ -181,20 +184,22 @@ namespace PixelSortApp
                             int newYOffset = yc*2;
                             if (y == 0)
                             {
-                                outputArray[x, newYOffset] = color;
+                                column[newYOffset] = color;
                             }
                             else if (y == chunkSize - 1)
                             {
-                                outputArray[x, newYOffset + 1] = color;
+                                column[newYOffset + 1] = color;
                             }
                         }
                         else
                         {
                             if (y + yoffset < bHeight)
-                                outputArray[x, y + yoffset] = color; //lots of locking
+                                column[y + yoffset] = color;
                         }
                     }
                 }
+                
+                outputArray[x] = column;
 
                 //update progress so updater recognises change
                 progress++;
@@ -229,30 +234,31 @@ namespace PixelSortApp
             }
         }
 
-        static Bitmap arrayToBitmap(Color[,] array)
+        static Bitmap arrayToBitmap(Color[][] array)
         {
-            Bitmap b = new Bitmap(array.GetLength(0), array.GetLength(1));
+            Bitmap b = new Bitmap(array.Length, array[0].Length);
 
-
-            for (int x = 0; x < array.GetLength(0); x++)
-            {
-                for (int y = 0; y < array.GetLength(1); y++)
-                {
-                    b.SetPixel(x, y, array[x, y]);
-                }
-            }
-
-            return b;
-        }
-        static Color[,] bitmapToArray(Bitmap b)
-        {
-            var array = new Color[b.Width, b.Height];
 
             for (int x = 0; x < b.Width; x++)
             {
                 for (int y = 0; y < b.Height; y++)
                 {
-                    array[x, y] = b.GetPixel(x, y);
+                    b.SetPixel(x, y, array[x][y]);
+                }
+            }
+
+            return b;
+        }
+        static Color[][] bitmapToArray(Bitmap b)
+        {
+            Color[][] array = new Color[b.Width][];
+
+            for (int x = 0; x < b.Width; x++)
+            {
+                array[x] = new Color[b.Width];
+                for (int y = 0; y < b.Height; y++)
+                {
+                    array[x][y] = b.GetPixel(x, y);
                 }
             }
 
