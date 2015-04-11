@@ -16,13 +16,13 @@ namespace PixelSortTool
             //make frames of an animation
             for (int i = 0; i <= 20; i++)
             {
-                currentI = i;
-                Sorter t = new Sorter();
+                //currentI = i;
+                //Sorter t = new Sorter(1, 8, SortMode.NearestNeighbour, i,false,null);
 
-                t.OnFinish += t_OnFinish;
-                t.OnProgressUpdate += t_OnProgressUpdate;
+                //t.OnFinish += t_OnFinish;
+                //t.OnProgressUpdate += t_OnProgressUpdate;
 
-                t.SortVertical(new Bitmap("input.jpg"), 1, 8, SortMode.NearestNeighbour, i);
+                //t.Sort(new Bitmap("input.jpg"));
             }
         }
 
