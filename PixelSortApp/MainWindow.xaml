@@ -41,7 +41,6 @@
                 <ComboBox Name="ModeComboBox" SelectedIndex="0" SelectionChanged="ModeComboBox_SelectionChanged">
                     <ComboBoxItem>Genetic</ComboBoxItem>
                     <ComboBoxItem>NearestNeighbour</ComboBoxItem>
-                    <ComboBoxItem>Downsample</ComboBoxItem>
                 </ComboBox>
             </DockPanel>
             <DockPanel  Margin="10,10,10,0">

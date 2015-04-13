@@ -273,7 +273,6 @@ namespace PixelSortApp
                     IterationsTextBox.IsEnabled = true;
                     GeneticModeComboBox.IsEnabled = true;
                     break;
-                case SortMode.Downsample:
                 case SortMode.NearestNeighbour:
                     IterationsTextBox.IsEnabled = false;
                     GeneticModeComboBox.IsEnabled = false;

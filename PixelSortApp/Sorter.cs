@@ -90,7 +90,6 @@ namespace PixelSortApp
                         path[j] = map[bestValue[j]];
                     }
                     break;
-                case SortMode.Downsample:
                 case SortMode.NearestNeighbour:
                     var nn = new NearestNeighbour(map);
 
@@ -136,7 +135,7 @@ namespace PixelSortApp
                 return b;
 
             //determine new height, downsample mode will decrease it.
-            bHeight = (mode == SortMode.Downsample) ? (bHeight / chunkSize * 2) : (b.Height);
+            bHeight = b.Height;
             bWidth = b.Width;
 
             int chunkNum = bHeight / chunkSize;
@@ -178,27 +177,11 @@ namespace PixelSortApp
                     for (int y = 0; y < sorted.Count; y++)
                     {
                         var color = sorted[y];
-                        if (mode == SortMode.Downsample)
-                        {
-                            //only care about first and last pixels
-                            int newYOffset = yc*2;
-                            if (y == 0)
-                            {
-                                column[newYOffset] = color;
-                            }
-                            else if (y == chunkSize - 1)
-                            {
-                                column[newYOffset + 1] = color;
-                            }
-                        }
-                        else
-                        {
-                            if (y + yoffset < bHeight)
-                                column[y + yoffset] = color;
-                        }
+                        if (y + yoffset < bHeight)
+                            column[y + yoffset] = color;
                     }
                 }
-                
+
                 outputArray[x] = column;
 
                 //update progress so updater recognises change
@@ -225,7 +208,7 @@ namespace PixelSortApp
             {
                 updating = true;
 
-                double percentile = biDirectional ? ((double) progress / (bWidth+bHeight)) : ((double) progress/bWidth);
+                double percentile = biDirectional ? ((double)progress / (bWidth + bHeight)) : ((double)progress / bWidth);
 
                 OnProgressUpdate(percentile, arrayToBitmap(outputArray));
 
@@ -270,8 +253,7 @@ namespace PixelSortApp
     public enum SortMode
     {
         Genetic,
-        NearestNeighbour,
-        Downsample
+        NearestNeighbour
     }
 
 
