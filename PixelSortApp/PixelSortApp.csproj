@@ -73,10 +73,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GeneticSorter.cs" />
     <Compile Include="GeneticTSP.cs" />
+    <Compile Include="ISorter.cs" />
     <Compile Include="NearestNeighbour.cs" />
     <Compile Include="Pixel.cs" />
     <Compile Include="Sorter.cs" />
+    <Compile Include="SortMode.cs" />
+    <Compile Include="SortOptions.cs" />
     <Compile Include="YUV.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

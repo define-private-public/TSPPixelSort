@@ -145,29 +145,26 @@ namespace PixelSortApp
 
         void RunOnePass()
         {
-            int iterations;
-            int chunkSize;
-            double moveScale;
-            SortMode mode;
+            SortOptions options = new SortOptions{GeneticMode = geneticMode};
 
             if (sorterThread == null)
             {
-                if (int.TryParse(IterationsTextBox.Text, out iterations)
-                    && int.TryParse(ChunksTextBox.Text, out chunkSize)
+                if (int.TryParse(IterationsTextBox.Text, out options.Iterations)
+                    && int.TryParse(ChunksTextBox.Text, out options.ChunkSize)
                     && int.TryParse(PassesTextBox.Text, out passesToComplete)
-                    && double.TryParse(MoveScaleTextBox.Text, out moveScale))
+                    && double.TryParse(MoveScaleTextBox.Text, out options.MoveScale))
                 {
-                    if (chunkSize >= 1 && iterations >= 1)
+                    if (options.ChunkSize >= 1 && options.Iterations >= 1)
                     {
-                        mode = (SortMode)Enum.Parse(typeof(SortMode), ModeComboBox.Text);
+                        options.Mode = (SortMode)Enum.Parse(typeof(SortMode), ModeComboBox.Text);
 
-                        bool biDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault();
+                        options.BiDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault();
 
 
                         Bitmap b = new Bitmap(oldImage);
 
 
-                        sorter = new Sorter(iterations, chunkSize, mode, moveScale, biDirectional,geneticMode);
+                        sorter = new Sorter(options);
                         sorter.OnProgressUpdate += Sorter_OnProgressUpdate;
                         sorter.OnFinish += sorter_OnFinish;
 

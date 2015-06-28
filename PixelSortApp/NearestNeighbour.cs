@@ -6,23 +6,19 @@ using System.Threading.Tasks;
 
 namespace PixelSortApp
 {
-    class NearestNeighbour
+    class NearestNeighbour : ISorter
     {
         private Pixel[] map;
         private bool[] visited;
         private List<int> path = new List<int>();
         private int numVisited = 1;
         private int cityCount;
-
-        public NearestNeighbour(Pixel[] _map)
+        //Find a path along a pixel array using nearest-neighbour TSP solution
+        public Pixel[] FindPath(Pixel[] _map,SortOptions options)
         {
             map = _map;
             visited = new bool[_map.Length];
-        }
 
-        //Find a path along a pixel array using nearest-neighbour TSP solution
-        public Pixel[] FindPath()
-        {
             //register the first city as visited
             visited[0] = true;
             path.Add(0);

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PixelSort
 {
-    class YUV
+    public class YUV
     {
         public double Y;
         public double U;
@@ -56,12 +56,6 @@ namespace PixelSort
 
             V = VMax * (R - Y) / (1 - Wr);
         }
-
-        public YUV()
-        {
-
-        }
-
 
         private int Clamp(int input, int max, int min)
         {

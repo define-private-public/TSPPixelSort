@@ -1,10 +1,24 @@
 using System;
 using System.Linq;
+using System.Drawing;
+using PixelSort;
 
 namespace PixelSortApp
 {
     public struct Pixel
     {
+        public Pixel(Color rgb,YUV yuv,int originalLocation)
+        {
+            Y = yuv.Y;
+            U = yuv.U;
+            V = yuv.V;
+
+            R = rgb.R;
+            G = rgb.G;
+            B = rgb.B;
+
+            OriginalLocation = originalLocation;
+        }
         public double Y;
         public double U;
         public double V;

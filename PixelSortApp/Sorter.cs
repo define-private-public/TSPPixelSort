@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AForge.Genetic;
 using PixelSort;
 using TSP;
 using System.Drawing;
@@ -26,26 +25,18 @@ namespace PixelSortApp
         private int bWidth;
         private int bHeight;
 
-        private int iterations;
-        private int chunkSize;
-        private SortMode mode;
-        private double moveScale;
-        private bool biDirectional;
-        private ISelectionMethod geneticMode;
+        public SortOptions Options;
+
+        public Sorter(SortOptions options)
+        {
+            Options = options;
+        }
 
 
         private int lastProgress = 0;
         private bool updating = false;
 
-        public Sorter(int iterations, int chunkSize, SortMode mode, double moveScale, bool biDirectional, ISelectionMethod geneticMode)
-        {
-            this.iterations = iterations;
-            this.chunkSize = chunkSize;
-            this.mode = mode;
-            this.moveScale = moveScale;
-            this.biDirectional = biDirectional;
-            this.geneticMode = geneticMode;
-        }
+
         private List<Color> SortBuffer(Color[] buffer)
         {
             int citiesCount = buffer.Count();
@@ -54,49 +45,27 @@ namespace PixelSortApp
             int c = 0;
             foreach (var color in buffer)
             {
-                map[c].R = color.R;
-                map[c].G = color.G;
-                map[c].B = color.B;
-
-                //generate yuv colors for sorting purposes
                 var yuv = new YUV(color);
 
-                map[c].Y = yuv.Y;
-                map[c].U = yuv.U;
-                map[c].V = yuv.V;
-                map[c].OriginalLocation = c * moveScale;
+                map[c] = new Pixel(color, yuv,(int) (c*Options.MoveScale));
                 c++;
             }
 
             Pixel[] path = new Pixel[citiesCount];
 
-            switch (mode)
+            ISorter sorter = null;
+
+            switch (Options.Mode)
             {
                 case SortMode.Genetic:
-                    TSPFitnessFunction fitnessFunction = new TSPFitnessFunction(map);
-                    Population population = new Population(100, new TSPChromosome(map), fitnessFunction, geneticMode);
-
-                    for (int i = 0; i < iterations; i++)
-                    {
-                        population.RunEpoch();
-                    }
-
-                    ushort[] bestValue = ((PermutationChromosome)population.BestChromosome).Value;
-
-                    for (int j = 0; j < citiesCount; j++)
-                    {
-                        path[j] = map[bestValue[j]];
-                        path[j] = map[bestValue[j]];
-                        path[j] = map[bestValue[j]];
-                    }
+                    sorter = new GeneticSorter();
                     break;
                 case SortMode.NearestNeighbour:
-                    var nn = new NearestNeighbour(map);
-
-                    path = nn.FindPath();
+                    sorter = new NearestNeighbour();
                     break;
             }
 
+            path = sorter.FindPath(map, Options);
 
             var outBuffer = new List<Color>();
             for (int i = 0; i < citiesCount; i++)
@@ -111,11 +80,11 @@ namespace PixelSortApp
         {
             var bitmap = SortVertical(b);
 
-            if (biDirectional)
+            if (Options.BiDirectional)
             {
                 //rotate chunkSize too if neccessary
-                if (chunkSize == bHeight)
-                    chunkSize = bWidth;
+                if (Options.ChunkSize == bHeight)
+                    Options.ChunkSize = bWidth;
 
                 bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
                 bitmap = SortVertical(bitmap);
@@ -131,14 +100,14 @@ namespace PixelSortApp
             updating = false;
 
             //cant sort such a small chunk
-            if (chunkSize <= 2)
+            if (Options.ChunkSize <= 2)
                 return b;
 
             //determine new height, downsample mode will decrease it.
             bHeight = b.Height;
             bWidth = b.Width;
 
-            int chunkNum = bHeight / chunkSize;
+            int chunkNum = bHeight / Options.ChunkSize;
 
 
             //create arrays to store bitmap data, allow for locking multithreading.
@@ -157,12 +126,12 @@ namespace PixelSortApp
                 //go through each chunk
                 for (int yc = 0; yc < chunkNum; yc++)
                 {
-                    int yoffset = yc * chunkSize;
+                    int yoffset = yc * Options.ChunkSize;
 
-                    var samples = new Color[chunkSize];
+                    var samples = new Color[Options.ChunkSize];
 
                     //create samples
-                    for (int y = 0; y < chunkSize; y++)
+                    for (int y = 0; y < Options.ChunkSize; y++)
                     {
                         if (y + yoffset < bHeight)
                             samples[y] = column[y + yoffset];
@@ -208,7 +177,7 @@ namespace PixelSortApp
             {
                 updating = true;
 
-                double percentile = biDirectional ? ((double)progress / (bWidth + bHeight)) : ((double)progress / bWidth);
+                double percentile = Options.BiDirectional ? ((double)progress / (bWidth + bHeight)) : ((double)progress / bWidth);
 
                 OnProgressUpdate(percentile, arrayToBitmap(outputArray));
 
@@ -249,12 +218,4 @@ namespace PixelSortApp
         }
 
     }
-
-    public enum SortMode
-    {
-        Genetic,
-        NearestNeighbour
-    }
-
-
 }
