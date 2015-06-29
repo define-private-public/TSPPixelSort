@@ -47,7 +47,7 @@ namespace PixelSortApp
             {
                 var yuv = new YUV(color);
 
-                map[c] = new Pixel(color, yuv,(int) (c*Options.MoveScale));
+                map[c] = new Pixel(color, yuv, (int)(c * Options.MoveScale));
                 c++;
             }
 
@@ -63,6 +63,9 @@ namespace PixelSortApp
                 case SortMode.NearestNeighbour:
                     sorter = new NearestNeighbour();
                     break;
+                case SortMode.Random:
+                    sorter = new RandomSorter();
+                    break;
             }
 
             path = sorter.FindPath(map, Options);
@@ -76,19 +79,33 @@ namespace PixelSortApp
         }
 
 
-        public void Sort(Bitmap b)
+        public void Sort(Bitmap bitmap)
         {
-            var bitmap = SortVertical(b);
 
-            if (Options.BiDirectional)
+            while (true)
             {
-                //rotate chunkSize too if neccessary
-                if (Options.ChunkSize == bHeight)
-                    Options.ChunkSize = bWidth;
-
-                bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
                 bitmap = SortVertical(bitmap);
-                bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                if (Options.BiDirectional)
+                {
+                    //rotate chunkSize too if neccessary
+                    if (Options.ChunkSize == bHeight)
+                        Options.ChunkSize = bWidth;
+
+                    bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                    bitmap = SortVertical(bitmap);
+                    bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+
+                    if (Options.ChunkSize == bWidth)
+                        Options.ChunkSize = bHeight;
+                }
+
+                Options.PassesRemaining--;
+                if (Options.PassesRemaining <= 0)
+                    break;
+
+
+
+
             }
 
             OnFinish(bitmap);
@@ -177,7 +194,7 @@ namespace PixelSortApp
             {
                 updating = true;
 
-                double percentile = Options.BiDirectional ? ((double)progress / (bWidth + bHeight)) : ((double)progress / bWidth);
+                double percentile = (Options.BiDirectional ? ((double)progress / (bWidth + bHeight)) : ((double)progress / bWidth)) / Options.Passes;
 
                 OnProgressUpdate(percentile, arrayToBitmap(outputArray));
 
@@ -207,7 +224,7 @@ namespace PixelSortApp
 
             for (int x = 0; x < b.Width; x++)
             {
-                array[x] = new Color[b.Width];
+                array[x] = new Color[b.Height];
                 for (int y = 0; y < b.Height; y++)
                 {
                     array[x][y] = b.GetPixel(x, y);

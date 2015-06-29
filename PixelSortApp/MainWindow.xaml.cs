@@ -42,11 +42,7 @@ namespace PixelSortApp
 
         private Stopwatch stopwatch = new Stopwatch();
 
-        private int numPasses;
-
         private ISelectionMethod geneticMode;
-
-        private int passesToComplete;
         public MainWindow()
         {
             InitializeComponent();
@@ -81,18 +77,9 @@ namespace PixelSortApp
             {
                 TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
                 sorterThread = null;
-                numPasses++;
+                stopwatch.Stop();
+                this.ShowMessageAsync("Elapsed Time", stopwatch.ElapsedMilliseconds + "ms");
 
-                if (numPasses < passesToComplete)
-                {
-                    LoopImages();
-                    RunOnePass();
-                }
-                else
-                {
-                    stopwatch.Stop();
-                    this.ShowMessageAsync("Elapsed Time", stopwatch.ElapsedMilliseconds + "ms");
-                }
             }
         }
 
@@ -139,27 +126,27 @@ namespace PixelSortApp
         {
             stopwatch.Reset();
             stopwatch.Start();
-            numPasses = 0;
             RunOnePass();
         }
 
         void RunOnePass()
         {
-            SortOptions options = new SortOptions{GeneticMode = geneticMode};
+            SortOptions options = new SortOptions { GeneticMode = geneticMode };
 
             if (sorterThread == null)
             {
                 if (int.TryParse(IterationsTextBox.Text, out options.Iterations)
                     && int.TryParse(ChunksTextBox.Text, out options.ChunkSize)
-                    && int.TryParse(PassesTextBox.Text, out passesToComplete)
+                    && int.TryParse(PassesTextBox.Text, out options.Passes)
                     && double.TryParse(MoveScaleTextBox.Text, out options.MoveScale))
                 {
-                    if (options.ChunkSize >= 1 && options.Iterations >= 1)
+                    if (options.ChunkSize >= 1 && options.Iterations >= 1 && options.Passes >= 1)
                     {
                         options.Mode = (SortMode)Enum.Parse(typeof(SortMode), ModeComboBox.Text);
 
                         options.BiDirectional = BidirectionalCheckBox.IsChecked.GetValueOrDefault();
 
+                        options.PassesRemaining = options.Passes;
 
                         Bitmap b = new Bitmap(oldImage);
 
@@ -271,6 +258,10 @@ namespace PixelSortApp
                     GeneticModeComboBox.IsEnabled = true;
                     break;
                 case SortMode.NearestNeighbour:
+                    IterationsTextBox.IsEnabled = false;
+                    GeneticModeComboBox.IsEnabled = false;
+                    break;
+                case SortMode.Random:
                     IterationsTextBox.IsEnabled = false;
                     GeneticModeComboBox.IsEnabled = false;
                     break;

@@ -3,6 +3,7 @@ namespace PixelSortApp
     public enum SortMode
     {
         Genetic,
-        NearestNeighbour
+        NearestNeighbour,
+        Random
     }
 }
